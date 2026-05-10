@@ -7,7 +7,7 @@ from gtts import gTTS
 import io
 
 # Бет баптаулары
-st.set_page_config(page_title="Serik-Ai AI Edition", layout="wide")
+st.set_page_config(page_title="Serik-Ai Custom Words", layout="wide")
 wikipedia.set_lang("ru")
 
 # Дизайн
@@ -29,26 +29,17 @@ def get_audio_html(text):
         return f'<audio autoplay="true" src="data:audio/mp3;base64,{audio_b64}">'
     except: return ""
 
-# Автоматты қате түзету функциясы (Түзеткіш)
+# Авто-түзету
 def auto_correct(text):
     text = text.lower().strip()
-    # Жиі кездесетін қателерді автоматты түзету
-    corrections = {
-        "рефератт": "реферат",
-        "ессе": "эссе",
-        "истария": "история",
-        "расказ": "рассказ",
-        "првет": "привет",
-        "сссрр": "ссср",
-        "казахстанн": "казахстан"
-    }
+    corrections = {"рефератт": "реферат", "ессе": "эссе", "истария": "история", "расказ": "рассказ"}
     for wrong, right in corrections.items():
         text = text.replace(wrong, right)
     return text
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
-    welcome = "Привет! Я Serik-Ai. Теперь я умею исправлять твои ошибки и составлять умные тексты сам. О чем напишем сегодня?"
+    welcome = "Привет! Теперь я могу писать тексты ровно на столько слов, сколько ты попросишь. Просто напиши: 'Реферат про космос на 500 слов'."
     st.session_state.messages.append({"role": "assistant", "content": welcome})
     st.markdown(get_audio_html(welcome), unsafe_allow_html=True)
 
@@ -56,73 +47,72 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-def ai_content_creator(q):
-    q = auto_correct(q) # Сенің қатеңді түзетеді
+def generate_custom_text(q):
+    q = auto_correct(q)
     
-    # Тез жауаптар
-    brain = {
-        "привет": "Привет! Я на связи. Исправлю любые ошибки и напишу лучший текст!",
-        "как дела": "Все отлично, мой интеллект растет с каждым твоим вопросом.",
-        "кто ты": "Я Serik-Ai, созданный Нуриком для генерации самых крутых текстов."
-    }
-    if q in brain: return brain[q]
+    # Сөз санын анықтау (мысалы: "на 500 слов")
+    word_count_match = re.search(r'(\d+)\s*(слов|слово|слова)', q)
+    if word_count_match:
+        target_words = int(word_count_match.group(1))
+    else:
+        target_words = 500 # Егер айтпаса, стандартты 500 сөз
 
-    # Тақырыпты анықтау
-    mode = "стандарт"
-    if "реферат" in q: mode = "реферат"
-    elif "эссе" in q: mode = "эссе"
-    elif "история" in q or "рассказ" in q: mode = "история"
-
-    topic = q.replace("напиши", "").replace("реферат", "").replace("эссе", "").replace("про", "").replace("рассказ", "").replace("историю", "").strip()
+    topic = re.sub(r'(\d+)\s*(слов|слово|слова)', '', q)
+    topic = topic.replace("напиши", "").replace("реферат", "").replace("эссе", "").replace("про", "").strip()
 
     try:
-        # Wikipedia-дан мәтін алу
         search_results = wikipedia.search(topic)
         if not search_results:
-            return f"Я понял, что ты имеешь в виду '{topic}', но даже в моей базе данных пока мало информации. Давай попробуем другую тему?"
+            return f"Я понял, что ты хочешь текст на {target_words} слов про '{topic}', но информации маловато. Попробуй другую тему."
         
         page = wikipedia.page(search_results[0])
-        raw_text = page.content.split('. ')
+        # Мәтінді сөйлемдерге бөлу
+        raw_sentences = page.content.split('. ')
         
-        # Сөйлемдерді ақылды байланыстырушы сөздер
+        # Сөйлемдерді байланыстырушы сөздермен байыту
         connectors = ["Кроме того, ", "Важно отметить, что ", "Следовательно, ", "Более того, ", "Интересно, что "]
         
-        smart_sentences = []
-        for i, s in enumerate(raw_text[:60]): # 60 сөйлемге дейін жинау
-            if len(s) > 30:
-                # Әр 3-ші сөйлемге байланыстырушы сөз қосу (өздігінен құрастыру)
-                if i % 3 == 0 and i != 0:
-                    smart_sentences.append(connectors[i % len(connectors)] + s.lower())
-                else:
-                    smart_sentences.append(s)
+        final_text_list = []
+        current_word_count = 0
+        
+        # Мәтінді керекті сөз санына жеткенше жинау
+        while current_word_count < target_words and len(final_text_list) < 200:
+            for i, s in enumerate(raw_sentences):
+                if current_word_count >= target_words:
+                    break
+                if len(s) > 20:
+                    prefix = connectors[i % len(connectors)] if i % 3 == 0 else ""
+                    new_sentence = prefix + s.strip() + ". "
+                    final_text_list.append(new_sentence)
+                    current_word_count += len(new_sentence.split())
+            # Егер мәтін жетпесе, айналымды қайталау (созу үшін)
+            if current_word_count < target_words:
+                raw_sentences = [s + " (подробности далее)" for s in raw_sentences]
 
-        if mode == "реферат":
-            res = f"### ИНТЕЛЛЕКТУАЛЬНЫЙ РЕФЕРАТ: {topic.upper()}\n\n"
-            res += f"**Введение:** {page.summary[:500]}...\n\n"
-            res += "**Основная часть:** " + ". ".join(smart_sentences[5:50]) + ".\n\n"
-            res += "**Заключение:** Таким образом, анализ темы показывает, что " + smart_sentences[-1] + "."
-            return res
+        final_text = "".join(final_text_list)
         
-        elif mode == "эссе":
-            return f"### ЭССЕ: {topic.upper()}\n\nНа мой взгляд, данная тема заслуживает особого внимания. " + ". ".join(smart_sentences[:30]) + "."
-        
-        elif mode == "история":
-            return f"### ИСТОРИЯ: {topic.upper()}\n\nВсе началось с того, что " + ". ".join(smart_sentences[:25]) + "."
-            
+        # Форматтау
+        if "реферат" in q:
+            return f"### РЕФЕРАТ: {topic.upper()} (Приблизительно {target_words} слов)\n\n" + final_text
+        elif "эссе" in q:
+            return f"### ЭССЕ: {topic.upper()}\n\n" + final_text
         else:
-            return ". ".join(smart_sentences[:15]) + "."
+            return f"### ИСТОРИЯ: {topic.upper()}\n\n" + final_text
 
     except:
-        return f"Я заметил ошибку в запросе или данных, но не волнуйся, я подстроил поиск под '{topic}'. К сожалению, именно сейчас база данных недоступна, попробуй еще раз!"
+        return "Произошла ошибка. Попробуй еще раз, уточнив название темы!"
 
-# Енгізу
-if prompt := st.chat_input("Напиши рефератт про Сссрр..."):
+# Input
+if prompt := st.chat_input("Напиши реферат про СССР на 1000 слов..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"): st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        with st.spinner("Исправляю ошибки и создаю текст..."):
-            response = ai_content_creator(prompt)
+        with st.spinner(f"Генерирую текст..."):
+            response = generate_custom_text(prompt)
             st.markdown(response)
+            # Сөз санын есептеп көрсету
+            real_count = len(response.split())
+            st.caption(f"📊 Всего слов: {real_count}")
             st.markdown(get_audio_html(response), unsafe_allow_html=True)
             st.session_state.messages.append({"role": "assistant", "content": response})
