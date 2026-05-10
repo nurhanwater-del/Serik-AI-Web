@@ -4,107 +4,90 @@ import wikipedia
 import requests
 import re
 import base64
-from bs4 import BeautifulSoup
-from googlesearch import search as google_search
 from gtts import gTTS
 import io
 
-# Настройка
-st.set_page_config(page_title="Serik-Ai Final", layout="wide")
-wikipedia.set_lang("ru")
+# Беттің баптаулары
+st.set_page_config(page_title="Serik-Ai PRO Max", layout="wide")
+wikipedia.set_lang("ru") # Орысша іздеу
 
-# Дизайн
+# Дизайн (қара фон, ақ жазу)
 st.markdown("""
     <style>
-    .stApp { background-color: #0e1117; }
-    .stApp, p, h1, h2, h3, span, label { color: #ffffff !important; }
+    .stApp { background-color: #0e1117; color: white; }
+    .stMarkdown, p, h1, h2, h3, span { color: white !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# Дауыс шығару функциясы
+# Дауыс шығару HTML-ы
 def get_audio_html(text):
-    tts = gTTS(text=text, lang='ru')
-    fp = io.BytesIO()
-    tts.write_to_fp(fp)
-    fp.seek(0)
-    audio_b64 = base64.b64encode(fp.read()).decode()
-    return f'<audio autoplay="true" src="data:audio/mp3;base64,{audio_b64}">'
+    try:
+        clean_txt = re.sub(r'[^\w\sа-яА-ЯёЁ]', '', text)[:200]
+        tts = gTTS(text=clean_txt, lang='ru')
+        fp = io.BytesIO()
+        tts.write_to_fp(fp)
+        fp.seek(0)
+        audio_b64 = base64.b64encode(fp.read()).decode()
+        return f'<audio autoplay="true" src="data:audio/mp3;base64,{audio_b64}">'
+    except: return ""
 
-# 1. ҚАРСЫ АЛУ (Приветствие)
-if "greeted" not in st.session_state:
-    welcome_msg = "Привет! Я Serik-Ai. Твой мощный интеллект. Я готов написать для тебя реферат, историю или эссе. О чем сегодня узнаем?"
-    st.session_state.greeted = True
-    st.session_state.messages = [{"role": "assistant", "content": welcome_msg}]
-    # Автоматты түрде дауыспен амандасу
-    st.markdown(get_audio_html(welcome_msg), unsafe_allow_html=True)
+# Ботпен амандасу
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+    welcome = "Привет! Я Serik-Ai. Я всё починил! Теперь я напишу для тебя любой реферат или эссе. Что ищем?"
+    st.session_state.messages.append({"role": "assistant", "content": welcome})
+    st.markdown(get_audio_html(welcome), unsafe_allow_html=True)
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-def get_super_ai_response(q):
+def get_smart_content(q):
     q = q.lower().strip()
     
-    # 2. ҚАТЕЛЕРДІ ТҮЗЕТУ ЖӘНЕ ТЕЗ ЖАУАПТАР
-    brain = {
-        "привет": "Привет-привет! Я на связи и готов к работе. Какую тему разберем?",
-        "как дела": "Мои алгоритмы в идеальном порядке. Готов генерировать знания!",
-        "кто тебя создал": "Меня создал великий разработчик Нұрик!",
-        "что делаешь": "Сканирую интернет в поисках ответов для тебя."
+    # 1. Тез жауаптар
+    fast_answers = {
+        "привет": "Привет! Я готов к работе. О чем написать?",
+        "как дела": "Отлично! Мои сервера работают на полную мощь.",
+        "кто тебя создал": "Меня создал гениальный Нұрик!"
     }
-    
-    for key in brain:
-        if key in q: return brain[key]
+    if q in fast_answers: return fast_answers[q]
 
-    # 3. РЕФЕРАТ/ЭССЕ/ИСТОРИЯ ЛОГИКАСЫ (100% жауап беру)
+    # 2. Ақпаратты алу (Википедия арқылы - бұл 100% істейді)
     topic = q.replace("напиши", "").replace("реферат", "").replace("эссе", "").replace("про", "").strip()
     
     try:
-        all_text = []
-        # Гуглдан терең іздеу
-        results = google_search(f"{topic} подробная лекция материал история", num_results=12, lang="ru")
-        headers = {'User-Agent': 'Mozilla/5.0'}
+        # Бүкіл мақаланы алу
+        page = wikipedia.page(topic)
+        content = page.content
+        summary = page.summary
         
-        for url in results:
-            try:
-                r = requests.get(url, headers=headers, timeout=4)
-                soup = BeautifulSoup(r.text, 'html.parser')
-                for p in soup.find_all('p'):
-                    if len(p.text) > 60: all_text.append(p.text)
-            except: continue
-        
-        # Егер Гугл үндемесе, Википедия
-        if len(all_text) < 5:
-            try:
-                wiki_p = wikipedia.page(topic).content
-                all_text.extend(wiki_p.split('. '))
-            except: pass
-
-        # 100% БІЛМЕЙМІН ДЕМЕУІ ҮШІН (Егер ақпарат мүлдем жоқ болса)
-        if len(all_text) < 2:
-            return f"Тема {topic} очень интересная. Даже если в сети мало прямых данных, можно сказать, что это важное явление, которое требует детального изучения и анализа в будущем."
-
-        # Реферат құрастыру (Үлкен көлем)
+        # Реферат/Эссе форматына салу
         if "реферат" in q:
-            res = f"### ПОЛНЫЙ РЕФЕРАТ: {topic.upper()}\n\n"
-            res += "**Введение:** " + ". ".join(all_text[:12]) + ".\n\n"
-            res += "**Основная часть:** " + ". ".join(all_text[12:100]) + ".\n\n" # Осында 100 сөйлемге дейін
-            res += "**Заключение:** Таким образом, мы видим глубокое влияние этой темы на мир."
-            return res
+            sections = content.split('==')
+            full_ref = f"### РЕФЕРАТ: {topic.upper()}\n\n"
+            full_ref += f"**Введение:** {summary}\n\n"
+            full_ref += "**Основная часть:**\n" + content[:5000] + "...\n\n"
+            full_ref += "**Заключение:** Данная тема имеет глубокое историческое и социальное значение."
+            return full_ref
+        
+        elif "эссе" in q:
+            return f"### ЭССЕ НА ТЕМУ: {topic.upper()}\n\nНа мой взгляд, эта тема очень важна. {summary}"
+            
         else:
-            return ". ".join(all_text[:50]) + "."
-
+            return summary
+            
     except:
-        return "Я немного задумался, но одно знаю точно: эта тема важна. Попробуй спросить чуть конкретнее!"
+        return f"Я искал информацию про '{topic}', но не смог найти точного совпадения. Попробуй написать название темы точнее."
 
 # Жазу жолағы
-if prompt := st.chat_input("Напиши реферат про..."):
+if prompt := st.chat_input("Напиши реферат про историю Казахстана..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"): st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        response = get_super_ai_response(prompt)
+        response = get_smart_content(prompt)
         st.markdown(response)
         # Жауаптың басын дауыстап оқу
-        st.markdown(get_audio_html(response[:200]), unsafe_allow_html=True)
+        st.markdown(get_audio_html(response), unsafe_allow_html=True)
         st.session_state.messages.append({"role": "assistant", "content": response})
