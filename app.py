@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 import streamlit as st
 import wikipedia
-import requests
 import re
 import base64
 from gtts import gTTS
 import io
 
-# Беттің баптаулары
-st.set_page_config(page_title="Serik-Ai PRO Max", layout="wide")
-wikipedia.set_lang("ru") # Орысша іздеу
+# Бет баптаулары
+st.set_page_config(page_title="Serik-Ai AI Edition", layout="wide")
+wikipedia.set_lang("ru")
 
-# Дизайн (қара фон, ақ жазу)
+# Дизайн
 st.markdown("""
     <style>
     .stApp { background-color: #0e1117; color: white; }
@@ -19,10 +18,9 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Дауыс шығару HTML-ы
 def get_audio_html(text):
     try:
-        clean_txt = re.sub(r'[^\w\sа-яА-ЯёЁ]', '', text)[:200]
+        clean_txt = re.sub(r'[^\w\sа-яА-ЯёЁ]', '', text)[:150]
         tts = gTTS(text=clean_txt, lang='ru')
         fp = io.BytesIO()
         tts.write_to_fp(fp)
@@ -31,10 +29,26 @@ def get_audio_html(text):
         return f'<audio autoplay="true" src="data:audio/mp3;base64,{audio_b64}">'
     except: return ""
 
-# Ботпен амандасу
+# Автоматты қате түзету функциясы (Түзеткіш)
+def auto_correct(text):
+    text = text.lower().strip()
+    # Жиі кездесетін қателерді автоматты түзету
+    corrections = {
+        "рефератт": "реферат",
+        "ессе": "эссе",
+        "истария": "история",
+        "расказ": "рассказ",
+        "првет": "привет",
+        "сссрр": "ссср",
+        "казахстанн": "казахстан"
+    }
+    for wrong, right in corrections.items():
+        text = text.replace(wrong, right)
+    return text
+
 if "messages" not in st.session_state:
     st.session_state.messages = []
-    welcome = "Привет! Я Serik-Ai. Я всё починил! Теперь я напишу для тебя любой реферат или эссе. Что ищем?"
+    welcome = "Привет! Я Serik-Ai. Теперь я умею исправлять твои ошибки и составлять умные тексты сам. О чем напишем сегодня?"
     st.session_state.messages.append({"role": "assistant", "content": welcome})
     st.markdown(get_audio_html(welcome), unsafe_allow_html=True)
 
@@ -42,52 +56,73 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-def get_smart_content(q):
-    q = q.lower().strip()
+def ai_content_creator(q):
+    q = auto_correct(q) # Сенің қатеңді түзетеді
     
-    # 1. Тез жауаптар
-    fast_answers = {
-        "привет": "Привет! Я готов к работе. О чем написать?",
-        "как дела": "Отлично! Мои сервера работают на полную мощь.",
-        "кто тебя создал": "Меня создал гениальный Нұрик!"
+    # Тез жауаптар
+    brain = {
+        "привет": "Привет! Я на связи. Исправлю любые ошибки и напишу лучший текст!",
+        "как дела": "Все отлично, мой интеллект растет с каждым твоим вопросом.",
+        "кто ты": "Я Serik-Ai, созданный Нұриком для генерации самых крутых текстов."
     }
-    if q in fast_answers: return fast_answers[q]
+    if q in brain: return brain[q]
 
-    # 2. Ақпаратты алу (Википедия арқылы - бұл 100% істейді)
-    topic = q.replace("напиши", "").replace("реферат", "").replace("эссе", "").replace("про", "").strip()
-    
+    # Тақырыпты анықтау
+    mode = "стандарт"
+    if "реферат" in q: mode = "реферат"
+    elif "эссе" in q: mode = "эссе"
+    elif "история" in q or "рассказ" in q: mode = "история"
+
+    topic = q.replace("напиши", "").replace("реферат", "").replace("эссе", "").replace("про", "").replace("рассказ", "").replace("историю", "").strip()
+
     try:
-        # Бүкіл мақаланы алу
-        page = wikipedia.page(topic)
-        content = page.content
-        summary = page.summary
+        # Wikipedia-дан мәтін алу
+        search_results = wikipedia.search(topic)
+        if not search_results:
+            return f"Я понял, что ты имеешь в виду '{topic}', но даже в моей базе данных пока мало информации. Давай попробуем другую тему?"
         
-        # Реферат/Эссе форматына салу
-        if "реферат" in q:
-            sections = content.split('==')
-            full_ref = f"### РЕФЕРАТ: {topic.upper()}\n\n"
-            full_ref += f"**Введение:** {summary}\n\n"
-            full_ref += "**Основная часть:**\n" + content[:5000] + "...\n\n"
-            full_ref += "**Заключение:** Данная тема имеет глубокое историческое и социальное значение."
-            return full_ref
+        page = wikipedia.page(search_results[0])
+        raw_text = page.content.split('. ')
         
-        elif "эссе" in q:
-            return f"### ЭССЕ НА ТЕМУ: {topic.upper()}\n\nНа мой взгляд, эта тема очень важна. {summary}"
+        # Сөйлемдерді ақылды байланыстырушы сөздер
+        connectors = ["Кроме того, ", "Важно отметить, что ", "Следовательно, ", "Более того, ", "Интересно, что "]
+        
+        smart_sentences = []
+        for i, s in enumerate(raw_text[:60]): # 60 сөйлемге дейін жинау
+            if len(s) > 30:
+                # Әр 3-ші сөйлемге байланыстырушы сөз қосу (өздігінен құрастыру)
+                if i % 3 == 0 and i != 0:
+                    smart_sentences.append(connectors[i % len(connectors)] + s.lower())
+                else:
+                    smart_sentences.append(s)
+
+        if mode == "реферат":
+            res = f"### ИНТЕЛЛЕКТУАЛЬНЫЙ РЕФЕРАТ: {topic.upper()}\n\n"
+            res += f"**Введение:** {page.summary[:500]}...\n\n"
+            res += "**Основная часть:** " + ". ".join(smart_sentences[5:50]) + ".\n\n"
+            res += "**Заключение:** Таким образом, анализ темы показывает, что " + smart_sentences[-1] + "."
+            return res
+        
+        elif mode == "эссе":
+            return f"### ЭССЕ: {topic.upper()}\n\nНа мой взгляд, данная тема заслуживает особого внимания. " + ". ".join(smart_sentences[:30]) + "."
+        
+        elif mode == "история":
+            return f"### ИСТОРИЯ: {topic.upper()}\n\nВсе началось с того, что " + ". ".join(smart_sentences[:25]) + "."
             
         else:
-            return summary
-            
-    except:
-        return f"Я искал информацию про '{topic}', но не смог найти точного совпадения. Попробуй написать название темы точнее."
+            return ". ".join(smart_sentences[:15]) + "."
 
-# Жазу жолағы
-if prompt := st.chat_input("Напиши реферат про историю Казахстана..."):
+    except:
+        return f"Я заметил ошибку в запросе или данных, но не волнуйся, я подстроил поиск под '{topic}'. К сожалению, именно сейчас база данных недоступна, попробуй еще раз!"
+
+# Енгізу
+if prompt := st.chat_input("Напиши рефератт про Сссрр..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"): st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        response = get_smart_content(prompt)
-        st.markdown(response)
-        # Жауаптың басын дауыстап оқу
-        st.markdown(get_audio_html(response), unsafe_allow_html=True)
-        st.session_state.messages.append({"role": "assistant", "content": response})
+        with st.spinner("Исправляю ошибки и создаю текст..."):
+            response = ai_content_creator(prompt)
+            st.markdown(response)
+            st.markdown(get_audio_html(response), unsafe_allow_html=True)
+            st.session_state.messages.append({"role": "assistant", "content": response})
