@@ -9,117 +9,102 @@ from googlesearch import search as google_search
 from gtts import gTTS
 import io
 
-# Настройка страницы
-st.set_page_config(page_title="Serik-Ai Ultra PRO", layout="wide")
+# Настройка
+st.set_page_config(page_title="Serik-Ai Final", layout="wide")
 wikipedia.set_lang("ru")
 
-# Дизайн: Қара фон, ақ жазу
+# Дизайн
 st.markdown("""
     <style>
     .stApp { background-color: #0e1117; }
     .stApp, p, h1, h2, h3, span, label { color: #ffffff !important; }
-    [data-testid="stSidebar"] { background-color: #1a1c23; border-right: 1px solid #30363d; }
-    .stTextInput>div>div>input { background-color: #2d2d2d !important; color: white !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# Дауыс функциясы (Тек қысқаша оқу үшін)
-def speak_text(text):
-    clean_txt = re.sub(r'[^\w\sа-яА-ЯёЁ]', '', text)[:250] # Тек алғашқы 250 әріпті оқиды
-    tts = gTTS(text=clean_txt, lang='ru')
+# Дауыс шығару функциясы
+def get_audio_html(text):
+    tts = gTTS(text=text, lang='ru')
     fp = io.BytesIO()
     tts.write_to_fp(fp)
-    return fp
+    fp.seek(0)
+    audio_b64 = base64.b64encode(fp.read()).decode()
+    return f'<audio autoplay="true" src="data:audio/mp3;base64,{audio_b64}">'
 
-with st.sidebar:
-    st.title("🧠 Serik-Ai Ultra PRO")
-    st.markdown("---")
-    st.success("✅ Статус: Работает")
-    st.info("📢 Бот умеет писать огромные рефераты и озвучивать краткую информацию.")
-    
-    # Дауысты қосу/өшіру баптауы
-    voice_on = st.checkbox("Включить озвучку ответа", value=True)
-    
-    if st.button("🗑️ Очистить историю"):
-        st.session_state.messages = []
-        st.rerun()
-
-# Боттың өзін таныстыруы (Кіргенде бір рет шығады)
-if "messages" not in st.session_state or not st.session_state.messages:
-    intro_text = "Привет! Я Serik-Ai, твой мощный интеллект. Я могу написать огромный реферат, эссе или историю. Просто напиши тему!"
-    st.session_state.messages = [{"role": "assistant", "content": intro_text}]
-
-st.title("🤖 Serik-Ai: Генератор контента")
+# 1. ҚАРСЫ АЛУ (Приветствие)
+if "greeted" not in st.session_state:
+    welcome_msg = "Привет! Я Serik-Ai. Твой мощный интеллект. Я готов написать для тебя реферат, историю или эссе. О чем сегодня узнаем?"
+    st.session_state.greeted = True
+    st.session_state.messages = [{"role": "assistant", "content": welcome_msg}]
+    # Автоматты түрде дауыспен амандасу
+    st.markdown(get_audio_html(welcome_msg), unsafe_allow_html=True)
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-def get_mega_response(q):
+def get_super_ai_response(q):
     q = q.lower().strip()
     
-    # Жанрларды анықтау
-    mode = "стандарт"
-    if "реферат" in q: mode = "реферат"
-    elif "эссе" in q: mode = "эссе"
-    elif "рассказ" in q or "история" in q: mode = "история"
+    # 2. ҚАТЕЛЕРДІ ТҮЗЕТУ ЖӘНЕ ТЕЗ ЖАУАПТАР
+    brain = {
+        "привет": "Привет-привет! Я на связи и готов к работе. Какую тему разберем?",
+        "как дела": "Мои алгоритмы в идеальном порядке. Готов генерировать знания!",
+        "кто тебя создал": "Меня создал великий разработчик Нұрик!",
+        "что делаешь": "Сканирую интернет в поисках ответов для тебя."
+    }
+    
+    for key in brain:
+        if key in q: return brain[key]
 
-    topic = q.replace("напиши", "").replace("реферат", "").replace("эссе", "").replace("про", "").replace("рассказ", "").replace("историю", "").strip()
-
+    # 3. РЕФЕРАТ/ЭССЕ/ИСТОРИЯ ЛОГИКАСЫ (100% жауап беру)
+    topic = q.replace("напиши", "").replace("реферат", "").replace("эссе", "").replace("про", "").strip()
+    
     try:
-        all_data = []
-        # Гуглдан 20 сайтқа дейін терең іздеу (көлемді болуы үшін)
-        results = google_search(f"{topic} подробный анализ лекция википедия", num_results=15, lang="ru")
-        
+        all_text = []
+        # Гуглдан терең іздеу
+        results = google_search(f"{topic} подробная лекция материал история", num_results=12, lang="ru")
         headers = {'User-Agent': 'Mozilla/5.0'}
+        
         for url in results:
             try:
                 r = requests.get(url, headers=headers, timeout=4)
                 soup = BeautifulSoup(r.text, 'html.parser')
                 for p in soup.find_all('p'):
-                    t = p.get_text().strip()
-                    if len(t) > 80: all_data.append(t)
-                if len(all_data) > 150: break 
+                    if len(p.text) > 60: all_text.append(p.text)
             except: continue
         
-        # Мәтінді құрастыру (1500-2000 сөзге жақындату)
-        if len(all_data) < 5:
+        # Егер Гугл үндемесе, Википедия
+        if len(all_text) < 5:
             try:
                 wiki_p = wikipedia.page(topic).content
-                all_data.extend(wiki_p.split('. '))
+                all_text.extend(wiki_p.split('. '))
             except: pass
 
-        if mode == "реферат":
+        # 100% БІЛМЕЙМІН ДЕМЕУІ ҮШІН (Егер ақпарат мүлдем жоқ болса)
+        if len(all_text) < 2:
+            return f"Тема {topic} очень интересная. Даже если в сети мало прямых данных, можно сказать, что это важное явление, которое требует детального изучения и анализа в будущем."
+
+        # Реферат құрастыру (Үлкен көлем)
+        if "реферат" in q:
             res = f"### ПОЛНЫЙ РЕФЕРАТ: {topic.upper()}\n\n"
-            res += "**ВВЕДЕНИЕ:** " + ". ".join(all_data[:10]) + ".\n\n"
-            res += "**ГЛАВА 1:** " + ". ".join(all_data[10:40]) + ".\n\n"
-            res += "**ГЛАВА 2:** " + ". ".join(all_data[40:80]) + ".\n\n"
-            res += "**ГЛАВА 3:** " + ". ".join(all_data[80:120]) + ".\n\n"
-            res += "**ЗАКЛЮЧЕНИЕ:** " + ". ".join(all_data[-10:]) + "."
+            res += "**Введение:** " + ". ".join(all_text[:12]) + ".\n\n"
+            res += "**Основная часть:** " + ". ".join(all_text[12:100]) + ".\n\n" # Осында 100 сөйлемге дейін
+            res += "**Заключение:** Таким образом, мы видим глубокое влияние этой темы на мир."
             return res
-        elif mode == "эссе":
-            return f"### ЭССЕ: {topic.upper()}\n\n" + ". ".join(all_data[:60]) + "."
-        elif mode == "история":
-            return f"### ИСТОРИЯ: {topic.upper()}\n\n" + ". ".join(all_data[:50]) + "."
         else:
-            return ". ".join(all_data[:30]) + "."
+            return ". ".join(all_text[:50]) + "."
 
-    except Exception:
-        return "Не удалось собрать данные. Попробуйте другой запрос."
+    except:
+        return "Я немного задумался, но одно знаю точно: эта тема важна. Попробуй спросить чуть конкретнее!"
 
-# Жазу
-if prompt := st.chat_input("Напиши огромный реферат про..."):
+# Жазу жолағы
+if prompt := st.chat_input("Напиши реферат про..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"): st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        with st.spinner("Собираю тысячи слов из интернета..."):
-            response = get_mega_response(prompt)
-            st.markdown(response)
-            
-            # Дауыс шығару (Егер қосулы болса)
-            if voice_on:
-                audio_fp = speak_text(response)
-                st.audio(audio_fp, format='audio/mp3')
-                
-            st.session_state.messages.append({"role": "assistant", "content": response})
+        response = get_super_ai_response(prompt)
+        st.markdown(response)
+        # Жауаптың басын дауыстап оқу
+        st.markdown(get_audio_html(response[:200]), unsafe_allow_html=True)
+        st.session_state.messages.append({"role": "assistant", "content": response})
