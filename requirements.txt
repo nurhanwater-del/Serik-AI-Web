@@ -1,0 +1,5 @@
+streamlit
+wikipedia
+requests
+beautifulsoup4
+googlesearch-python
