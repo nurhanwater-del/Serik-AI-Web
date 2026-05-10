@@ -3,3 +3,4 @@ wikipedia
 google
 beautifulsoup4
 gTTS
+requests
