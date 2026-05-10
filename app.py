@@ -6,31 +6,52 @@ import re
 from bs4 import BeautifulSoup
 from googlesearch import search as google_search
 
-# Настройка интерфейса
+# Беттің баптаулары
 st.set_page_config(page_title="Serik-Ai Ultra v2.0", layout="wide")
 wikipedia.set_lang("ru")
 
+# ДИЗАЙНДЫ ТҮЗЕТУ: Фон қара, жазу анық АҚ түсті
 st.markdown("""
     <style>
-    .stApp { background-color: #0e1117; color: #ffffff; }
-    [data-testid="stSidebar"] { background-color: #1a1c23; border-right: 1px solid #30363d; }
-    .stButton>button { width: 100%; border-radius: 5px; height: 3em; background-color: #238636; color: white; }
+    /* Негізгі фон қара */
+    .stApp { 
+        background-color: #0e1117; 
+    }
+    /* Барлық мәтінді АҚ түсті қылу */
+    .stApp, .stMarkdown, p, h1, h2, h3, span, label {
+        color: #ffffff !important;
+    }
+    /* Сол жақтағы панель (sidebar) баптауы */
+    [data-testid="stSidebar"] { 
+        background-color: #1a1c23; 
+        border-right: 1px solid #30363d; 
+    }
+    /* Жазу жазатын жердің түсі */
+    .stTextInput>div>div>input { 
+        background-color: #2d2d2d !important; 
+        color: white !important; 
+    }
+    /* Батырмалардың стилі */
+    .stButton>button { 
+        width: 100%; 
+        border-radius: 5px; 
+        background-color: #238636; 
+        color: white; 
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# Sidebar
+# Сол жақ панель (Sidebar)
 with st.sidebar:
     st.title("🚀 Serik-Ai PRO")
-    st.info("Бот анализирует до 15 сайтов одновременно для создания глубоких текстов.")
-    st.warning("⚠️ Для написания длинных рефератов (1500+ слов) может потребоваться около 30-60 секунд.")
-    
+    st.warning("⚠️ ВНИМАНИЕ: Бот анализирует много сайтов. Подождите немного.")
     st.write("---")
-    st.markdown("**Доступные форматы:**")
-    st.write("📝 Реферат (Введение, Части, Заключение)")
-    st.write("✒️ Эссе (Личное мнение, Анализ)")
-    st.write("📖 Рассказ / История")
+    st.markdown("**Что я могу:**")
+    st.write("✅ Рефераты (1500+ слов)")
+    st.write("✅ Эссе и рассказы")
+    st.write("✅ Ответы на вопросы")
     
-    if st.button("🗑️ Очистить историю"):
+    if st.button("🗑️ Очистить чат"):
         st.session_state.messages = []
         st.rerun()
 
@@ -39,6 +60,7 @@ st.title("🤖 Serik-Ai: Твой интеллектуальный автор")
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Чатты көрсету (Ақ жазумен)
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
@@ -46,7 +68,7 @@ for message in st.session_state.messages:
 def generate_pro_text(q):
     q = q.lower().strip()
     
-    # Определение жанра
+    # Режимді анықтау
     mode = "стандарт"
     if "реферат" in q: mode = "реферат"
     elif "эссе" in q: mode = "эссе"
@@ -55,65 +77,49 @@ def generate_pro_text(q):
     topic = q.replace("напиши", "").replace("реферат", "").replace("эссе", "").replace("про", "").replace("рассказ", "").replace("историю", "").strip()
 
     try:
-        # Глубокий сбор данных (до 15 ссылок)
         all_sentences = []
+        # 15 сайтқа дейін іздеу (көлемді болуы үшін)
         search_query = f"{topic} подробный материал статья лекция"
-        results = google_search(search_query, num_results=15, lang="ru")
+        results = google_search(search_query, num_results=12, lang="ru")
         
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
         
         for url in results:
             try:
                 r = requests.get(url, headers=headers, timeout=5)
                 soup = BeautifulSoup(r.text, 'html.parser')
-                paragraphs = soup.find_all('p')
-                for p in paragraphs:
+                for p in soup.find_all('p'):
                     text = p.get_text().strip()
-                    if len(text) > 60 and not any(x in text.lower() for x in ['cookie', 'подпишитесь', 'реклама']):
-                        # Очистка и разделение на предложения
-                        clean_p = re.sub(r'\[.*?\]', '', text)
-                        all_sentences.extend(clean_p.split('. '))
+                    if len(text) > 60:
+                        all_sentences.extend(text.split('. '))
             except: continue
         
-        # Уникализация предложений (өздігінен сөйлем құрау үшін)
         unique_sentences = list(dict.fromkeys([s.strip() for s in all_sentences if len(s) > 40]))
-        
-        if len(unique_sentences) < 10:
-            try:
-                wiki_data = wikipedia.page(topic).content
-                unique_sentences.extend(wiki_data.split('. '))
-            except: pass
 
-        # Сборка текста по жанрам
         if mode == "реферат":
-            intro = f"### РЕФЕРАТ: {topic.upper()}\n\n**Введение**\n" + ". ".join(unique_sentences[:5]) + "."
-            body = "\n\n**Основная часть**\n" + ". ".join(unique_sentences[5:60]) + "."
-            outro = "\n\n**Заключение**\n" + "В ходе работы над темой было установлено, что " + ". ".join(unique_sentences[-5:]) + "."
-            return intro + body + outro
-            
+            res = f"### РЕФЕРАТ: {topic.upper()}\n\n"
+            res += "**Введение:** " + ". ".join(unique_sentences[:6]) + ".\n\n"
+            res += "**Основная часть:**\n" + ". ".join(unique_sentences[6:60]) + ".\n\n"
+            res += "**Заключение:** Таким образом, " + ". ".join(unique_sentences[-4:]) + "."
+            return res
         elif mode == "эссе":
-            essay = f"### ЭССЕ: {topic.upper()}\n\n"
-            essay += "Рассматривая данную проблему, стоит отметить важное. " + ". ".join(unique_sentences[:40]) + "."
-            return essay
-            
+            return f"### ЭССЕ: {topic.upper()}\n\n" + ". ".join(unique_sentences[:35]) + "."
         elif mode == "история":
-            story = f"### ИСТОРИЯ: {topic.upper()}\n\n"
-            story += "Это повествование берет свое начало в глубоком анализе событий. " + ". ".join(unique_sentences[:35]) + "."
-            return story
-            
+            return f"### ИСТОРИЯ: {topic.upper()}\n\n" + ". ".join(unique_sentences[:30]) + "."
         else:
-            return ". ".join(unique_sentences[:20]) + "."
+            return ". ".join(unique_sentences[:20]) + "." if unique_sentences else "Данные не найдены."
 
     except Exception:
-        return "Не удалось собрать достаточно данных. Попробуйте уточнить тему запроса."
+        return "Ошибка при поиске. Попробуйте еще раз."
 
-# Ввод
-if prompt := st.chat_input("Напиши подробный реферат про цифровизацию..."):
+# Жазу жолағы
+if prompt := st.chat_input("Напиши реферат про..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"): st.markdown(prompt)
+    with st.chat_message("user"):
+        st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        with st.spinner("Анализирую десятки источников и формирую текст..."):
+        with st.spinner("Думаю и пишу..."):
             response = generate_pro_text(prompt)
             st.markdown(response)
             st.session_state.messages.append({"role": "assistant", "content": response})
