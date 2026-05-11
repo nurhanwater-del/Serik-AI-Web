@@ -1,10 +1,6 @@
 streamlit
-wikipedia-api
+wikipedia
 googlesearch-python
 beautifulsoup4
 gTTS
 requests
-torch
-transformers
-numpy
-pandas
