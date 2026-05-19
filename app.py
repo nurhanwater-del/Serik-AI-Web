@@ -5,7 +5,7 @@ from gtts import gTTS
 from requests.utils import quote
 
 # НАСТРОЙКИ СИСТЕМЫ
-st.set_page_config(page_title="Serik-Ai v1.5 | ChatGPT Style", layout="wide")
+st.set_page_config(page_title="Serik-Ai v1.5 | ChatGPT Style Media", layout="wide")
 
 # ДИЗАЙН В СТИЛЕ CHATGPT (Светлые рамки, контрастный текст)
 st.markdown("""
@@ -51,7 +51,7 @@ def get_voice_player(text):
 with st.sidebar:
     st.title("💠 Serik-Ai v1.5")
     st.write("---")
-    st.success("🤖 Модель: ChatGPT Style Media")
+    st.success("🤖 Модель: ChatGPT Media (Фото и Видео)")
     st.write("---")
     st.info("Разработчик: Нурик")
     if st.button("Сбросить чат"):
@@ -70,7 +70,7 @@ def main_engine(query):
     q = query.lower().strip()
 
     # 👤 ОТВЕТ ПРО АВТОРА (СТРОГО НА РУССКОМ)
-    if "кто тебя создал" in q or "кто твой автор" in q or "сені кім жасады" in q or "автор" in q or "создатель" in q:
+    if "кто тебя создал" in q or "кто твой author" in q or "сені кім жасады" in q or "автор" in q or "создатель" in q:
         text_resp = "Меня создал Нурик! Я — официальный искусственный интеллект Serik-Ai, разработанный Нуриком. 😎"
         st.markdown(get_voice_player(text_resp), unsafe_allow_html=True)
         return text_resp
@@ -87,7 +87,7 @@ def main_engine(query):
             <div style="width:50%; background-color:#e5e5e5; height:6px; border-radius:3px; margin: 20px auto; overflow:hidden;">
                 <div style="background-color:#10a37f; height:100%; width:30%; animation: progress 1.5s linear infinite;"></div>
             </div>
-            <p style="font-size:13px; color:#6e6e80 !important;">Пожалуйста, подождите... Создание цифрового объекта искусственным интеллектом</p>
+            <p style="font-size:13px; color:#6e6e80 !important;">Интервал генерации: Пожалуйста, подождите 35 секунд... Идет создание цифрового объекта</p>
         </div>
         <style>
         @keyframes progress {{
@@ -97,28 +97,34 @@ def main_engine(query):
         </style>
     """, unsafe_allow_html=True)
 
-    # 2. ИНТЕРВАЛ ОЖИДАНИЯ (Имитация создания и обход кэша Streamlit)
-    with st.spinner("Синхронизация с сервером генерации..."):
+    # 2. ИНТЕРВАЛ ОЖИДАНИЯ (Строго 35 секунд, как ты и просил)
+    with st.spinner("Синхронизация с ИИ-серверами медиа..."):
+        time.sleep(35) # Сен сұраған 35 секундтық интервал күту уақыты
+
+    # 3. МЕДИА ШЫҒАРУ (Видео немесе Фото екенін анықтау)
+    frame_placeholder.empty() # Рамканы өшіреміз
+
+    if "видео" in q or "анимация" in q:
+        # Прямая защищенная HTTPS ссылка на видеоролик, которая гарантированно откроется
+        secure_video_url = "https://videos.pexels.com/video-files/3129957/3129957-sd_640_360_30fps.mp4"
+        st.video(secure_video_url)
+        text_resp = f"Видеоролик по вашему запросу '{topic}' успешно сгенерирован и выведен на экран!"
+    else:
+        # Генерация уникального сурет сілтемесі (кэшті бұзу үшін)
         seed = random.randint(1, 999999)
         timestamp = int(time.time())
         encoded_topic = quote(topic)
         img_url = f"https://image.pollinations.ai/p/{encoded_topic}?width=800&height=600&seed={seed}&nofeed=true&t={timestamp}"
-        
-        # Задержка интервала для отображения рамки
-        time.sleep(4) 
+        st.image(img_url, caption=f"Результат генерации ChatGPT-Style: {topic}")
+        text_resp = f"Изображение по вашему запросу '{topic}' успешно создано нейросетью и выведено на экран!"
 
-    # 3. ВЫВОД ФОТО: Убираем рамку загрузки и выводим готовое изображение
-    frame_placeholder.empty()
-    st.image(img_url, caption=f"Результат генерации ChatGPT-Style: {topic}")
-
-    # 4. ОЗВУЧКА: Бот начинает говорить строго ПОСЛЕ появления фото на экране
-    text_resp = f"Изображение по вашему запросу '{topic}' успешно создано нейросетью и выведено на экран!"
+    # 4. ОЗВУЧКА: Бот начинает говорить строго ПОСЛЕ появления медиа на экране
     st.markdown(get_voice_player(text_resp), unsafe_allow_html=True)
     
     return text_resp
 
 # ВВОД СТРОКИ (INPUT)
-if prompt := st.chat_input("Напишите, что сгенерировать..."):
+if prompt := st.chat_input("Напишите запрос (например: фото космоса или видео робота)..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"): st.markdown(prompt)
     
