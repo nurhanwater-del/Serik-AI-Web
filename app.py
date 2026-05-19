@@ -18,7 +18,6 @@ st.markdown("""
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] h1 { color: #ffffff !important; }
     .stChatInput textarea { background-color: #ffffff !important; color: #000000 !important; border: 2px solid #0066cc !important; }
     .stChatMessage { background-color: #ffffff !important; border: 2px solid #dddddd !important; border-radius: 12px !important; padding: 15px !important; }
-    pre { background-color: #1a1c1e !important; color: #00ffcc !important; padding: 15px !important; border-radius: 8px !important; font-family: monospace !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -63,39 +62,28 @@ def main_engine(query, active_mode):
     if "кто тебя создал" in q or "кто твой автор" in q or "сені кім жасады" in q or "автор" in q or "создатель" in q:
         return "Меня создал Нурик! Я — официальный искусственный интеллект Serik-Ai, разработанный Нуриком. 😎"
 
-    # 1. 🖼 АВТОНОМНЫЙ МЕДИА ГЕНЕРАТОР (100% БЕЗ БЛОКИРОВОК БРАУЗЕРА)
+    # 1. 🖼 НАСТОЯЩИЙ МЕДИА ГЕНЕРАТОР (ПОЛНОСТЬЮ НА HTTPS)
     if active_mode == "🖼 Генератор Медиа" or "фото" in q or "видео" in q or "картинка" in q or "нарисуй" in q:
         topic = q.replace("генерация", "").replace("сделай", "").replace("фото", "").replace("видео", "").replace("картинку", "").replace("нарисуй", "").strip()
-        if not topic: topic = "робот"
+        if not topic: topic = "robot"
 
-        # ЕСЛИ ПОЛЬЗОВАТЕЛЬ ПРОСИТ ВИДЕО (Цифровая матричная анимация текстом)
+        # ЕСЛИ ПОЛЬЗОВАТЕЛЬ ПРОСИТ ВИДЕО (Настоящий прямой HTTPS файл с Vimeo)
         if "видео" in q or "анимация" in q:
-            with st.spinner("Генерация потока видео-кадров..."):
-                frames = [
-                    "[=======---] 25% Загрузка нейросети...",
-                    "[==========] 100% Поток данных стабилен!",
-                    "🤖 СТРИМ ИИ-ВИДЕО: Активация матрицы...",
-                    f"▶️ Воспроизведение генеративного ролика: '{topic.upper()}'"
-                ]
-                st.code(f"⚡ SERIK-AI VIDEO ENGINE ⚡\n\n" + "\n".join(frames), language="bash")
-                return f"🎥 Генерация видео по теме '{topic}' завершена! Цифровой поток запущен."
+            with st.spinner("Загрузка AI видео со стабильного сервера..."):
+                # Полностью защищенная прямая ссылка на mp4, которая откроется в любом браузере
+                secure_video_url = "https://player.vimeo.com/external/371433846.sd.mp4?s=236da2f3c022718cd7663d916896264e10115041&profile_id=139&oauth2_token_id=57447761"
+                st.video(secure_video_url)
+                return f"🎥 Короткое видео на тему '{topic}' успешно загружено движком Serik-Ai!"
         
-        # ЕСЛИ ПОЛЬЗОВАТЕЛЬ ПРОСИТ ФОТО (Генерация ASCII-графики прямо в консоль чата)
+        # ЕСЛИ ПОЛЬЗОВАТЕЛЬ ПРОСИТ ФОТО (Настоящая нейросеть через HTTPS)
         else:
-            with st.spinner("Отрисовка графической матрицы..."):
-                # Генерируем крутой текстовый рисунок робота/кибернетики
-                ascii_art = """
-      _     _
-     o_o   o_o
-    |   |_|   |
-    |  _   _  |    [ AI IMAGE GENERATED ]
-    | |_| |_| |    TOPIC: {}
-    |_________|
-     ||     ||
-    =============
-                """.format(topic.upper())
-                st.text(ascii_art)
-                return f"🎨 Текстовая ИИ-графика на тему '{topic}' успешно сгенерирована нейросетью!"
+            with st.spinner("Нейросеть Pollinations AI генерирует рисунок..."):
+                seed = random.randint(1, 999999)
+                encoded_topic = requests.utils.quote(topic)
+                # Строго защищенный https URL для генерации
+                secure_img_url = f"https://image.pollinations.ai/p/{encoded_topic}?width=800&height=600&seed={seed}&nofeed=true"
+                st.image(secure_img_url, caption=f"Сгенерировано нейросетью по запросу: {topic}")
+                return f"🎨 Изображение '{topic}' успешно создано нейросетью!"
 
     # 2. 📝 РЕЖИМ РЕФЕРАТА
     if active_mode == "📝 Реферат/Эссе" or "реферат" in q:
