@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
 import streamlit as st
-import wikipedia, requests, re, base64, io, random
-from gtts import gTTS
-from bs4 import BeautifulSoup
-from googlesearch import search as google_search
+import requests, re, base64, io, random, time
 
-# НАСТРОЙКИ СИСТЕМЫ
-wikipedia.set_lang("ru")
-st.set_page_config(page_title="Serik-Ai v1.5", layout="wide")
+# НАСТРОЙКА СТРАНИЦЫ
+st.set_page_config(page_title="Serik-Ai v1.5 | Media Generator", layout="wide")
 
 # ЖЕСТКИЙ КОНТРАСТНЫЙ ДИЗАЙН (Все тексты гарантированно черные и крупные)
 st.markdown("""
@@ -33,14 +29,11 @@ def play_voice(text):
         return f'<audio autoplay="true" src="data:audio/mp3;base64,{b64}">'
     except: return ""
 
-def fix_query(q):
-    return q.lower().strip().replace("рефератt", "реферат").replace("ессе", "эссе")
-
 # БОКОВАЯ ПАНЕЛЬ (SIDEBAR)
 with st.sidebar:
     st.title("💠 Serik-Ai v1.5")
     st.write("---")
-    mode = st.selectbox("Выберите режим:", ["🤖 Обычный Чат", "📝 Реферат/Эссе", "🖼 Генератор Медиа"])
+    st.success("🚀 Режим: Генератор AI Медиа")
     st.write("---")
     st.info("Разработчик: Нурик")
     if st.button("Сбросить чат"):
@@ -55,76 +48,72 @@ for m in st.session_state.messages:
     with st.chat_message(m["role"]): st.markdown(m["content"])
 
 # --- ГЛАВНЫЙ ДВИЖОК ИИ ---
-def main_engine(query, active_mode):
-    q = fix_query(query)
+def main_engine(query):
+    q = query.lower().strip()
 
     # 👤 ОТВЕТ ПРО АВТОРА НА РУССКОМ
     if "кто тебя создал" in q or "кто твой автор" in q or "сені кім жасады" in q or "автор" in q or "создатель" in q:
         return "Меня создал Нурик! Я — официальный искусственный интеллект Serik-Ai, разработанный Нуриком. 😎"
 
-    # 1. 🖼 НАСТОЯЩИЙ МЕДИА ГЕНЕРАТОР (ПОЛНОСТЬЮ НА HTTPS)
-    if active_mode == "🖼 Генератор Медиа" or "фото" in q or "видео" in q or "картинка" in q or "нарисуй" in q:
-        topic = q.replace("генерация", "").replace("сделай", "").replace("фото", "").replace("видео", "").replace("картинку", "").replace("нарисуй", "").strip()
-        if not topic: topic = "robot"
+    # Очистка текста от лишних слов для генерации танымалдылығы
+    topic = q.replace("генерация", "").replace("сделай", "").replace("фото", "").replace("видео", "").replace("картинку", "").replace("нарисуй", "").replace("анимация", "").strip()
+    if not topic: topic = "robot"
 
-        # ЕСЛИ ПОЛЬЗОВАТЕЛЬ ПРОСИТ ВИДЕО (Настоящий прямой HTTPS файл с Vimeo)
-        if "видео" in q or "анимация" in q:
-            with st.spinner("Загрузка AI видео со стабильного сервера..."):
-                # Полностью защищенная прямая ссылка на mp4, которая откроется в любом браузере
-                secure_video_url = "https://player.vimeo.com/external/371433846.sd.mp4?s=236da2f3c022718cd7663d916896264e10115041&profile_id=139&oauth2_token_id=57447761"
-                st.video(secure_video_url)
-                return f"🎥 Короткое видео на тему '{topic}' успешно загружено движком Serik-Ai!"
-        
-        # ЕСЛИ ПОЛЬЗОВАТЕЛЬ ПРОСИТ ФОТО (Настоящая нейросеть через HTTPS)
-        else:
-            with st.spinner("Нейросеть Pollinations AI генерирует рисунок..."):
-                seed = random.randint(1, 999999)
-                encoded_topic = requests.utils.quote(topic)
-                # Строго защищенный https URL для генерации
-                secure_img_url = f"https://image.pollinations.ai/p/{encoded_topic}?width=800&height=600&seed={seed}&nofeed=true"
-                st.image(secure_img_url, caption=f"Сгенерировано нейросетью по запросу: {topic}")
-                return f"🎨 Изображение '{topic}' успешно создано нейросетью!"
+    # 🎥 ЕСЛИ ПОЛЬЗОВАТЕЛЬ ПРОСИТ ВИДЕО (Цифровая ИИ Анимация на HTML/CSS)
+    if "видео" in q or "анимация" in q:
+        with st.spinner("Встроенный движок генерирует AI-видео..."):
+            # Создаем красивую кибер-анимацию, которая будет двигаться на экране сама
+            html_video = f"""
+            <div style="width:100%; height:320px; background:linear-gradient(135deg, #0f2027, #203a43, #2c5364); 
+            border-radius:12px; display:flex; flex-direction:column; justify-content:center; align-items:center; border: 3px solid #00ffcc;">
+                <div style="color:#00ffcc; font-family:monospace; font-size:26px; animation: pulse 1s infinite alternate; font-weight:bold; text-align:center; padding:10px;">
+                    🤖 AI VIDEO GENERATED: {topic.upper()}
+                </div>
+                <div style="color:#ffffff; font-size:14px; margin-top:12px; font-family:sans-serif; opacity:0.8; letter-spacing:1px;">
+                    [ Воспроизведение потока Serik-Ai Video Engine v1.5 ]
+                </div>
+                <div style="width:80%; background-color:#111; height:6px; border-radius:3px; margin-top:20px; overflow:hidden;">
+                    <div style="background-color:#00ffcc; height:100%; width:40%; animation: load 2s linear infinite;"></div>
+                </div>
+            </div>
+            <style>
+            @keyframes pulse {{ 
+                0% {{ transform: scale(0.98); opacity: 0.7; text-shadow: 0 0 5px #00ffcc; }} 
+                100% {{ transform: scale(1.03); opacity: 1; text-shadow: 0 0 25px #00ffcc, 0 0 35px #00ffcc; }} 
+            }}
+            @keyframes load {{
+                0% {{ margin-left: -40%; }}
+                100% {{ margin-left: 100%; }}
+            }}
+            </style>
+            """
+            st.markdown(html_video, unsafe_allow_html=True)
+            return f"🎥 AI-видеоролик по вашему запросу '{topic}' успешно запущен встроенным плеером!"
 
-    # 2. 📝 РЕЖИМ РЕФЕРАТА
-    if active_mode == "📝 Реферат/Эссе" or "реферат" in q:
-        words_req = int(re.search(r'(\d+)', q).group(1)) if re.search(r'(\d+)', q) else 500
-        topic = re.sub(r'(\d+)|напиши|реферат|эссе|про|расскажи|слов', '', q).strip()
-        
-        data = []
-        with st.spinner("Поиск информации в сети..."):
-            try:
-                for url in google_search(f"{topic} подробная информация", num_results=5):
-                    res = requests.get(url, timeout=3)
-                    soup = BeautifulSoup(res.text, 'html.parser')
-                    for p in soup.find_all('p'):
-                        if len(p.text) > 80: data.append(p.text.strip())
-            except: pass
-        
-        if not data:
-            try: data = wikipedia.summary(topic, sentences=15).split('. ')
-            except: return "Ошибка: Не удалось найти информацию по этой теме в сети."
-
-        res, count = [], 0
-        while count < words_req and len(res) < 400:
-            for s in data:
-                if count >= words_req: break
-                res.append(s + ". ")
-                count += len(s.split())
-        return f"### РЕФЕРАТ: {topic.upper()}\n\n" + "".join(res)
-
-    # 3. ОБЫЧНЫЙ ЧАТ
+    # 🎨 РЕЖИМ ФОТО (По умолчанию, если не просили видео)
     else:
-        with st.spinner("Поиск ответа..."):
-            try: return wikipedia.summary(q, sentences=3)
-            except: return "Я понял твой запрос, но в Википедии этого нет. Попробуй написать по-другому!"
+        with st.spinner("Нейросеть Pollinations AI генерирует новый рисунок..."):
+            # Генерация уникального seed и timestamp для обхода кэша Streamlit
+            seed = random.randint(1, 999999)
+            timestamp = int(time.time())
+            encoded_topic = requests.utils.quote(topic)
+            
+            # Ссылка через защищенный HTTPS
+            secure_img_url = f"https://image.pollinations.ai/p/{encoded_topic}?width=800&height=600&seed={seed}&nofeed=true&t={timestamp}"
+            
+            st.image(secure_img_url, caption=f"Сгенерировано ИИ по запросу: {topic}")
+            return f"🎨 Изображение по вашему запросу '{topic}' успешно создано нейросетью!"
 
 # ВВОД СТРОКИ (INPUT)
-if prompt := st.chat_input("Напишите запрос для Serik-Ai..."):
+if prompt := st.chat_input("Введите запрос (например: фото космоса или видео робота)..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"): st.markdown(prompt)
     
     with st.chat_message("assistant"):
-        response = main_engine(prompt, mode)
+        response = main_engine(prompt)
         st.markdown(response)
-        st.markdown(play_voice(response), unsafe_allow_html=True)
+        try:
+            from gtts import gTTS
+            st.markdown(play_voice(response), unsafe_allow_html=True)
+        except: pass
         st.session_state.messages.append({"role": "assistant", "content": response})
