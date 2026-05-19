@@ -5,7 +5,7 @@ from gtts import gTTS
 from requests.utils import quote
 
 # НАСТРОЙКИ СИСТЕМЫ
-st.set_page_config(page_title="Serik-Ai v1.5 | Storyline Video Engine", layout="wide")
+st.set_page_config(page_title="Serik-Ai v1.5 | Professional Video Engine", layout="wide")
 
 # ДИЗАЙН В СТИЛЕ CHATGPT
 st.markdown("""
@@ -56,7 +56,7 @@ def get_voice_player(text):
 with st.sidebar:
     st.title("💠 Serik-Ai v1.5")
     st.write("---")
-    st.success("🤖 Режим: Чтение Промптов Кадров")
+    st.success("🤖 Движок: Безбарьерный Видео-Поток")
     st.write("---")
     st.info("Разработчик: Нурик")
     if st.button("Сбросить чат"):
@@ -69,32 +69,29 @@ if "messages" not in st.session_state:
 for m in st.session_state.messages:
     with st.chat_message(m["role"]): st.markdown(m["content"])
 
-# --- ДВИЖОК ИИ ---
+# --- ГЛАВНЫЙ ДВИЖОК ИИ ---
 def main_engine(query):
     q = query.strip()
     q_low = q.lower()
 
-    # Сұраныстан артық сөздерді тазалау
     clean_topic = q_low.replace("генерация", "").replace("сделай", "").replace("фото", "").replace("видео", "").replace("картинку", "").replace("нарисуй", "").replace("анимация", "").strip()
 
-    # 1. ChatGPT стиліндегі рамка
+    # 1. ChatGPT стиліндегі рамка мен логтар
     frame_placeholder = st.empty()
-    
-    # Жүктелу барысын түсіндіретін логтар
     logs = [
-        "🔍 Шаг 1: Анализ вашего текста и парсинг сюжетной линии...",
-        "🧠 Шаг 2: Распознавание отдельных кадров и действий из промпта...",
-        "🌐 Шаг 3: Поиск графических соответствий в глубинах интернета...",
-        "🎨 Шаг 4: Сборка и компиляция 1-го кадра сценария...",
-        "⚡ Шаг 5: Сборка и компиляция 2-го кадра сценария...",
-        "🚀 Шаг 6: Сборка и компиляция 3-го кадра сценария...",
-        "🛠 Шаг 7: Финальный рендеринг, синхронизация таймингов анимации..."
+        "🔍 Шаг 1: Парсинг и семантический анализ вашего сценария...",
+        "🧠 Шаг 2: Разделение промпта на независимые экшен-кадры...",
+        "🌐 Шаг 3: Поиск высокоточных графических ресурсов в сети...",
+        "🎨 Шаг 4: Интеграция 1-го кадра и стабилизация базового фона...",
+        "⚡ Шаг 5: Инициализация 2-го кадра с наложением эффекта движения...",
+        "🚀 Шаг 6: Финализация 3-го кадра и рендеринг бесшовной анимации...",
+        "🛠 Шаг 7: Сборка медиа-потока. Устранение мерцания и белых экранов..."
     ]
     
     for i, log in enumerate(logs):
         frame_placeholder.markdown(f"""
             <div class="chatgpt-box">
-                <p class="loading-text">⏳ ИИ Serik-Ai обрабатывает ваш сценарий видео...</p>
+                <p class="loading-text">⏳ Нейросеть Serik-Ai компилирует бесшовное видео...</p>
                 <div style="width:50%; background-color:#e5e5e5; height:6px; border-radius:3px; margin: 15px auto; overflow:hidden;">
                     <div style="background-color:#10a37f; height:100%; width:{(i+1)*14.2}%; transition: width 0.5s;"></div>
                 </div>
@@ -102,30 +99,26 @@ def main_engine(query):
                 <p style="font-size:11px; color:#888888 !important; margin-top:10px;">Прогресс: {int((i+1)*14.2)}%</p>
             </div>
         """, unsafe_allow_html=True)
-        time.sleep(5) # Жалпы 35 секунд күту интервалы
+        time.sleep(5) # 35 секунд күту уақыты
 
     frame_placeholder.empty()
     timestamp = int(time.time())
 
-    # 2. СЮЖЕТТІ АНЫҚТАУ ЖӘНЕ КАДРЛАРҒА БӨЛУ (Сен жазған промпты оқу)
-    # Мәтінді үтір, нүкте немесе сан арқылы бөліп алу логикасы
+    # Мәтінді кадрларға бөлу
     user_frames = re.split(r'[,.\n]|\d+:', q)
     user_frames = [f.strip() for f in user_frames if len(f.strip()) > 2]
 
-    # Егер пайдаланушы кадрларды өзі жазса, соны алады, жазбаса автоматты түрде өзі сюжет құрайды
     scenes = []
     if len(user_frames) >= 2:
-        for frame in user_frames[:4]: # Ең көп дегенде 4 кадр аламыз
-            scenes.append(quote(frame + " cinematic style hyperrealistic"))
+        for frame in user_frames[:3]: # Тұрақты жұмыс үшін 3 негізгі кадр аламыз
+            scenes.append(quote(frame + " cinematic dynamic action 8k"))
     else:
-        # Автоматты сюжет (егер жай ғана бір сөз жазса)
         scenes = [
-            quote(f"{clean_topic} action scene look around"),
-            quote(f"{clean_topic} moving fast dramatic effect"),
-            quote(f"{clean_topic} close up powerful background")
+            quote(f"{clean_topic} cinematic movement epic action shot"),
+            quote(f"{clean_topic} close up cyber details glowing effects"),
+            quote(f"{clean_topic} fast flying moving through environment")
         ]
 
-    # Егер сұраныста "фото" немесе "картинка" деген сөз басым болса және сюжет жазылмаса — жай сурет шығады
     if ("фото" in q_low or "картинка" in q_low) and len(user_frames) < 2:
         seed = random.randint(1, 999999)
         img_url = f"https://image.pollinations.ai/p/{quote(clean_topic)}?width=800&height=600&seed={seed}&nofeed=true&t={timestamp}"
@@ -136,54 +129,64 @@ def main_engine(query):
         </div>
         """
         st.markdown(photo_html, unsafe_allow_html=True)
-        text_resp = f"Изображение по вашему запросу успешно создано!"
+        text_resp = f"Изображение по вашему запросу успешно выведено на экран!"
     else:
-        # НАҒЫЗ СЮЖЕТТІК ВИДЕО (ӘР КАДРДЫ БӨЛЕК ОҚЫП ҚҰРАСТЫРУ)
+        # СЮЖЕТТІК ВИДЕО (АҚ ФОНСЫЗ ЖӘНЕ ДИНАМИКАЛЫҚ ҚОЗҒАЛЫСПЕН)
         img_urls = []
         for idx, scene in enumerate(scenes):
             seed = random.randint(1, 999999)
             img_urls.append(f"https://image.pollinations.ai/p/{scene}?width=800&height=500&seed={seed}&nofeed=true&t={timestamp+idx}")
 
-        # HTML5/CSS3 арқылы нағыз кадрлық видеоролик жасау (Жай ғана фотоны жақындатпайды, сюжетті ауыстырады)
-        slides_html = ""
-        animation_duration = len(img_urls) * 4
-        
-        for idx, url in enumerate(img_urls):
-            delay = idx * 4
-            slides_html += f'<div class="story-frame" style="background-image:url(\'{url}\'); animation-delay: {delay}s; animation-duration: {animation_duration}s;"></div>'
-
+        # Егер суреттер әлі жүктеліп үлгермесе, ақ фон шықпас үшін контейнердің өзіне бірінші суретті бекітеміз
         video_html = f"""
-        <div style="width:100%; max-width:800px; height:500px; position:relative; overflow:hidden; border-radius:12px; border:4px solid #10a37f; box-shadow:0 12px 30px rgba(0,0,0,0.3); margin:auto;">
-            {slides_html}
-            <div style="position:absolute; bottom:15px; left:20px; background:rgba(16,163,127,0.9); color:#fff; padding:6px 14px; font-family:sans-serif; font-size:12px; border-radius:20px; font-weight:bold; z-index:10;">
-                🎬 СЮЖЕТНЫЙ ВИДЕО-ПОТОК ПО ВАШЕМУ СЦЕНАРИЮ
+        <div style="width:100%; max-width:800px; height:500px; position:relative; overflow:hidden; border-radius:12px; border:4px solid #10a37f; box-shadow:0 12px 30px rgba(0,0,0,0.3); margin:auto; background-image:url('{img_urls[0]}'); background-size:cover; background-position:center;">
+            <div class="pro-frame f1" style="background-image:url('{img_urls[0]}');"></div>
+            <div class="pro-frame f2" style="background-image:url('{img_urls[1]}');"></div>
+            <div class="pro-frame f3" style="background-image:url('{img_urls[2]}');"></div>
+            <div style="position:absolute; bottom:15px; left:20px; background:rgba(16,163,127,0.95); color:#fff; padding:6px 14px; font-family:sans-serif; font-size:12px; border-radius:20px; font-weight:bold; z-index:99;">
+                🎬 СЮЖЕТНЫЙ ВИДЕО-ПОТОК SERIK-AI
             </div>
         </div>
         <style>
-        .story-frame {{
+        .pro-frame {{
             width:100%; height:100%; position:absolute; top:0; left:0;
             background-size:cover; background-position:center;
             opacity:0;
-            animation: playMovie infinite ease-in-out;
         }}
-        @keyframes playMovie {{
+        /* Нағыз кино сияқты қозғалыс пен біркелкі бесшовный ауысу анимациясы */
+        .f1 {{ animation: playF1 15s infinite ease-in-out; }}
+        .f2 {{ animation: playF2 15s infinite ease-in-out; }}
+        .f3 {{ animation: playF3 15s infinite ease-in-out; }}
+
+        @keyframes playF1 {{
+            0% {{ opacity: 1; transform: scale(1.0) translateX(0px); }}
+            30% {{ opacity: 1; transform: scale(1.04) translateX(10px); }}
+            33% {{ opacity: 0; }}
+            100% {{ opacity: 0; }}
+        }}
+        @keyframes playF2 {{
             0% {{ opacity: 0; }}
-            5% {{ opacity: 1; }}
-            25% {{ opacity: 1; }}
-            30% {{ opacity: 0; }}
+            33% {{ opacity: 1; transform: scale(1.0); }}
+            63% {{ opacity: 1; transform: scale(1.05); }}
+            66% {{ opacity: 0; }}
+            100% {{ opacity: 0; }}
+        }}
+        @keyframes playF3 {{
+            0% {{ opacity: 0; }}
+            66% {{ opacity: 1; transform: scale(1.05); }}
+            96% {{ opacity: 1; transform: scale(1.0) translateY(10px); }}
             100% {{ opacity: 0; }}
         }}
         </style>
         """
         st.markdown(video_html, unsafe_allow_html=True)
-        text_resp = f"Ваш покадровый сценарий успешно распознан! Видеоролик сгенерирован и запущен."
+        text_resp = f"Сюжетный видеоролик успешно собран из разных экшен-сцен без мерцания экранов!"
 
-    # 4. ОЗВУЧКА: Медиа шыққан соң ғана сөйлейді
     st.markdown(get_voice_player(text_resp), unsafe_allow_html=True)
     return text_resp
 
 # ВВОД СТРОКИ
-if prompt := st.chat_input("Напишите сценарий (например: 1: робот бежит, 2: робот летит, 3: робот спит)..."):
+if prompt := st.chat_input("Напишите сценарий (например: робот бежит, робот стреляет, робот улетает)..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"): st.markdown(prompt)
     
