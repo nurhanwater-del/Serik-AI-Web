@@ -4,3 +4,4 @@ googlesearch-python
 beautifulsoup4
 gTTS
 requests
+Pillow
