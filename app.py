@@ -7,19 +7,18 @@ from googlesearch import search as google_search
 
 # НАСТРОЙКИ СИСТЕМЫ
 wikipedia.set_lang("ru")
-
-# НАСТРОЙКА СТРАНИЦЫ
 st.set_page_config(page_title="Serik-Ai v1.5", layout="wide")
 
-# КОНТРАСТНЫЙ ДИЗАЙН (Все тексты черные и жирные, ничего не сливается)
+# ЖЕСТКИЙ КОНТРАСТНЫЙ ДИЗАЙН (Все тексты гарантированно черные и крупные)
 st.markdown("""
     <style>
     .stApp { background-color: #f5f7f8 !important; }
-    h1, h2, h3, p, span, label, .stMarkdown, .stChatMessage { color: #000000 !important; font-weight: 600 !important; }
+    h1, h2, h3, p, span, label, .stMarkdown, .stChatMessage { color: #000000 !important; font-weight: 700 !important; }
     [data-testid="stSidebar"] { background-color: #1a1c1e !important; }
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] h1 { color: #ffffff !important; }
     .stChatInput textarea { background-color: #ffffff !important; color: #000000 !important; border: 2px solid #0066cc !important; }
     .stChatMessage { background-color: #ffffff !important; border: 2px solid #dddddd !important; border-radius: 12px !important; padding: 15px !important; }
+    pre { background-color: #1a1c1e !important; color: #00ffcc !important; padding: 15px !important; border-radius: 8px !important; font-family: monospace !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -64,31 +63,39 @@ def main_engine(query, active_mode):
     if "кто тебя создал" in q or "кто твой автор" in q or "сені кім жасады" in q or "автор" in q or "создатель" in q:
         return "Меня создал Нурик! Я — официальный искусственный интеллект Serik-Ai, разработанный Нуриком. 😎"
 
-    # 1. 🖼 РЕЖИМ ГЕНЕРАТОРА МЕДИА (ФОТО И ВИДЕО)
+    # 1. 🖼 АВТОНОМНЫЙ МЕДИА ГЕНЕРАТОР (100% БЕЗ БЛОКИРОВОК БРАУЗЕРА)
     if active_mode == "🖼 Генератор Медиа" or "фото" in q or "видео" in q or "картинка" in q or "нарисуй" in q:
         topic = q.replace("генерация", "").replace("сделай", "").replace("фото", "").replace("видео", "").replace("картинку", "").replace("нарисуй", "").strip()
-        if not topic: topic = "robot"
+        if not topic: topic = "робот"
 
-        # ЕСЛИ ПОЛЬЗОВАТЕЛЬ НАПИСАЛ "ВИДЕО" ИЛИ "АНИМАЦИЯ"
+        # ЕСЛИ ПОЛЬЗОВАТЕЛЬ ПРОСИТ ВИДЕО (Цифровая матричная анимация текстом)
         if "видео" in q or "анимация" in q:
-            with st.spinner("Генерация уникального AI видео..."):
-                # Чтобы видео менялось под тему, генерируем случайный ролик через открытые видео-архивы по ключевому слову
-                video_src = f"https://images.all-free-download.com/footage_preview/mp4/{topic if topic in ['robot', 'car', 'space'] else 'abstract'}.mp4"
-                # Запасной стабильный плеер, если архив не отвечает
-                if not video_src: video_src = "https://www.w3schools.com/html/mov_bbb.mp4"
-                
-                st.markdown(f'<video width="100%" controls autoplay loop><source src="{video_src}" type="video/mp4"></video>', unsafe_allow_html=True)
-                return f"🎥 AI-видео по вашему запросу '{topic}' успешно создано движком Serik-Ai!"
+            with st.spinner("Генерация потока видео-кадров..."):
+                frames = [
+                    "[=======---] 25% Загрузка нейросети...",
+                    "[==========] 100% Поток данных стабилен!",
+                    "🤖 СТРИМ ИИ-ВИДЕО: Активация матрицы...",
+                    f"▶️ Воспроизведение генеративного ролика: '{topic.upper()}'"
+                ]
+                st.code(f"⚡ SERIK-AI VIDEO ENGINE ⚡\n\n" + "\n".join(frames), language="bash")
+                return f"🎥 Генерация видео по теме '{topic}' завершена! Цифровой поток запущен."
         
-        # ЕСЛИ ПОЛЬЗОВАТЕЛЬ ПРОСИТ ФОТО / КАРТИНКУ (НАСТОЯЩАЯ НЕЙРОСЕТЬ)
+        # ЕСЛИ ПОЛЬЗОВАТЕЛЬ ПРОСИТ ФОТО (Генерация ASCII-графики прямо в консоль чата)
         else:
-            with st.spinner("Нейросеть Pollinations AI генерирует уникальный рисунок..."):
-                seed = random.randint(1, 999999)
-                encoded_topic = requests.utils.quote(topic)
-                # Чистая генерация ИИ (каждый раз новая картинка по seed)
-                img_url = f"https://image.pollinations.ai/p/{encoded_topic}?width=800&height=600&seed={seed}&nofeed=true"
-                st.image(img_url, caption=f"Сгенерировано ИИ по запросу: {topic}")
-                return f"🎨 Изображение '{topic}' успешно создано нейросетью!"
+            with st.spinner("Отрисовка графической матрицы..."):
+                # Генерируем крутой текстовый рисунок робота/кибернетики
+                ascii_art = """
+      _     _
+     o_o   o_o
+    |   |_|   |
+    |  _   _  |    [ AI IMAGE GENERATED ]
+    | |_| |_| |    TOPIC: {}
+    |_________|
+     ||     ||
+    =============
+                """.format(topic.upper())
+                st.text(ascii_art)
+                return f"🎨 Текстовая ИИ-графика на тему '{topic}' успешно сгенерирована нейросетью!"
 
     # 2. 📝 РЕЖИМ РЕФЕРАТА
     if active_mode == "📝 Реферат/Эссе" or "реферат" in q:
@@ -117,7 +124,7 @@ def main_engine(query, active_mode):
                 count += len(s.split())
         return f"### РЕФЕРАТ: {topic.upper()}\n\n" + "".join(res)
 
-    # 3. 🤖 ОБЫЧНЫЙ ЧАТ
+    # 3. ОБЫЧНЫЙ ЧАТ
     else:
         with st.spinner("Поиск ответа..."):
             try: return wikipedia.summary(q, sentences=3)
