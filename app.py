@@ -5,9 +5,9 @@ from gtts import gTTS
 from requests.utils import quote
 
 # НАСТРОЙКИ СИСТЕМЫ
-st.set_page_config(page_title="Serik-Ai v1.5 | ChatGPT Style Media", layout="wide")
+st.set_page_config(page_title="Serik-Ai v1.5 | Autonomous Media Engine", layout="wide")
 
-# ДИЗАЙН В СТИЛЕ CHATGPT (Светлые рамки, контрастный текст)
+# ДИЗАЙН В СТИЛЕ CHATGPT (Светлые рамки, черный контрастный текст)
 st.markdown("""
     <style>
     .stApp { background-color: #f7f7f8 !important; }
@@ -51,7 +51,7 @@ def get_voice_player(text):
 with st.sidebar:
     st.title("💠 Serik-Ai v1.5")
     st.write("---")
-    st.success("🤖 Модель: ChatGPT Media (Фото и Видео)")
+    st.success("🤖 Движок: Автономный ИИ-Медиа")
     st.write("---")
     st.info("Разработчик: Нурик")
     if st.button("Сбросить чат"):
@@ -69,8 +69,8 @@ for m in st.session_state.messages:
 def main_engine(query):
     q = query.lower().strip()
 
-    # 👤 ОТВЕТ ПРО АВТОРА (СТРОГО НА РУССКОМ)
-    if "кто тебя создал" in q or "кто твой author" in q or "сені кім жасады" in q or "автор" in q or "создатель" in q:
+    # 👤 ОТВЕТ ПРО АВТОРА
+    if "кто тебя создал" in q or "кто твой автор" in q or "сені кім жасады" in q or "автор" in q or "создатель" in q:
         text_resp = "Меня создал Нурик! Я — официальный искусственный интеллект Serik-Ai, разработанный Нуриком. 😎"
         st.markdown(get_voice_player(text_resp), unsafe_allow_html=True)
         return text_resp
@@ -79,15 +79,15 @@ def main_engine(query):
     topic = q.replace("генерация", "").replace("сделай", "").replace("фото", "").replace("видео", "").replace("картинку", "").replace("нарисуй", "").replace("анимация", "").strip()
     if not topic: topic = "robot"
 
-    # 1. СТАРТ: Показываем красивую рамку загрузки (ВСЕ НА РУССКОМ)
+    # 1. СТАРТ: Показываем красивую рамку загрузки ChatGPT (ВСЕ НА РУССКОМ)
     frame_placeholder = st.empty()
     frame_placeholder.markdown(f"""
         <div class="chatgpt-box">
-            <p class="loading-text">⏳ Нейросеть Serik-Ai генерирует медиа по запросу: "{topic.upper()}"</p>
+            <p class="loading-text">⏳ Нейросеть Serik-Ai автономно собирает кадры и создает объект: "{topic.upper()}"</p>
             <div style="width:50%; background-color:#e5e5e5; height:6px; border-radius:3px; margin: 20px auto; overflow:hidden;">
                 <div style="background-color:#10a37f; height:100%; width:30%; animation: progress 1.5s linear infinite;"></div>
             </div>
-            <p style="font-size:13px; color:#6e6e80 !important;">Интервал генерации: Пожалуйста, подождите 35 секунд... Идет создание цифрового объекта</p>
+            <p style="font-size:13px; color:#6e6e80 !important;">Интервал компиляции: Подождите 35 секунд... ИИ самостоятельно верстает медиа-поток</p>
         </div>
         <style>
         @keyframes progress {{
@@ -97,34 +97,78 @@ def main_engine(query):
         </style>
     """, unsafe_allow_html=True)
 
-    # 2. ИНТЕРВАЛ ОЖИДАНИЯ (Строго 35 секунд, как ты и просил)
-    with st.spinner("Синхронизация с ИИ-серверами медиа..."):
-        time.sleep(35) # Сен сұраған 35 секундтық интервал күту уақыты
+    # 2. ИНТЕРВАЛ ОЖИДАНИЯ (Строго 35 секунд для симуляции верстки и компиляции)
+    with st.spinner("Поиск и компиляция графических элементов..."):
+        time.sleep(35)
 
-    # 3. МЕДИА ШЫҒАРУ (Видео немесе Фото екенін анықтау)
-    frame_placeholder.empty() # Рамканы өшіреміз
+    # 3. МЕДИА ШЫҒАРУ (Өздігінен құрастыру кезеңі)
+    frame_placeholder.empty() # Рамканы тазалаймыз
+    timestamp = int(time.time())
+    encoded_topic = quote(topic)
 
     if "видео" in q or "анимация" in q:
-        # Прямая защищенная HTTPS ссылка на видеоролик, которая гарантированно откроется
-        secure_video_url = "https://videos.pexels.com/video-files/3129957/3129957-sd_640_360_30fps.mp4"
-        st.video(secure_video_url)
-        text_resp = f"Видеоролик по вашему запросу '{topic}' успешно сгенерирован и выведен на экран!"
+        # ВИДЕО СҰРАЛҒАНДА: ИИ 4 түрлі бағыттағы суретті тауып, өзі нағыз видеоролик құрастырады
+        seed1 = random.randint(1, 250000)
+        seed2 = random.randint(251000, 500000)
+        seed3 = random.randint(501000, 750000)
+        seed4 = random.randint(751000, 999999)
+        
+        # 4 кадрды әр түрлі стильде алдыру (кэшті толық бұзу)
+        img1 = f"https://image.pollinations.ai/p/{encoded_topic}_close_up?width=800&height=500&seed={seed1}&nofeed=true&t={timestamp}"
+        img2 = f"https://image.pollinations.ai/p/{encoded_topic}_cinematic?width=800&height=500&seed={seed2}&nofeed=true&t={timestamp+1}"
+        img3 = f"https://image.pollinations.ai/p/{encoded_topic}_cyberpunk?width=800&height=500&seed={seed3}&nofeed=true&t={timestamp+2}"
+        img4 = f"https://image.pollinations.ai/p/{encoded_topic}_epic?width=800&height=500&seed={seed4}&nofeed=true&t={timestamp+3}"
+        
+        # HTML5 / CSS3 слайд-видео ойнатқышы. Суреттер бір-біріне масштабталып, әдемі ағып ауысады
+        video_html = f"""
+        <div style="width:100%; max-width:800px; height:500px; position:relative; overflow:hidden; border-radius:12px; border:4px solid #10a37f; box-shadow:0 12px 30px rgba(0,0,0,0.2); margin:auto;">
+            <div class="v-slide" style="background-image:url('{img1}'); animation-delay: 0s;"></div>
+            <div class="v-slide" style="background-image:url('{img2}'); animation-delay: 4s;"></div>
+            <div class="v-slide" style="background-image:url('{img3}'); animation-delay: 8s;"></div>
+            <div class="v-slide" style="background-image:url('{img4}'); animation-delay: 12s;"></div>
+            <div style="position:absolute; bottom:15px; left:20px; background:rgba(16,163,127,0.85); color:#fff; padding:6px 14px; font-family:sans-serif; font-size:12px; border-radius:20px; font-weight:bold; letter-spacing:0.5px;">
+                🎬 АВТОНОМНЫЙ ВИДЕО-ПОТОК SERIK-AI: {topic.upper()}
+            </div>
+        </div>
+        <style>
+        .v-slide {{
+            width:100%; height:100%; position:absolute; top:0; left:0;
+            background-size:cover; background-position:center;
+            opacity:0; transform: scale(1);
+            animation: flowVideo 16s infinite ease-in-out;
+        }}
+        @keyframes flowVideo {{
+            0% {{ opacity: 0; transform: scale(1.0); }}
+            4% {{ opacity: 1; }}
+            25% {{ opacity: 1; transform: scale(1.04); }}
+            29% {{ opacity: 0; transform: scale(1.06); }}
+            100% {{ opacity: 0; }}
+        }}
+        </style>
+        """
+        st.markdown(video_html, unsafe_allow_html=True)
+        text_resp = f"Видеоролик по вашему запросу '{topic}' успешно сгенерирован ИИ из независимых кадров!"
+        
     else:
-        # Генерация уникального сурет сілтемесі (кэшті бұзу үшін)
+        # ФОТО СҰРАЛҒАНДА: Бір ерекше сапалы сурет құрастырады
         seed = random.randint(1, 999999)
-        timestamp = int(time.time())
-        encoded_topic = quote(topic)
-        img_url = f"https://image.pollinations.ai/p/{encoded_topic}?width=800&height=600&seed={seed}&nofeed=true&t={timestamp}"
-        st.image(img_url, caption=f"Результат генерации ChatGPT-Style: {topic}")
-        text_resp = f"Изображение по вашему запросу '{topic}' успешно создано нейросетью и выведено на экран!"
+        img_url = f"https://image.pollinations.ai/p/{encoded_topic}_masterpiece?width=800&height=600&seed={seed}&nofeed=true&t={timestamp}"
+        
+        photo_html = f"""
+        <div style="width:100%; max-width:800px; border-radius:12px; border:3px solid #10a37f; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.1); margin:auto;">
+            <img src="{img_url}" style="width:100%; height:auto; display:block;">
+        </div>
+        """
+        st.markdown(photo_html, unsafe_allow_html=True)
+        text_resp = f"Изображение по вашему запросу '{topic}' успешно создано автономным движком нейросети!"
 
-    # 4. ОЗВУЧКА: Бот начинает говорить строго ПОСЛЕ появления медиа на экране
+    # 4. ОЗВУЧКА: Медиа толық шыққан БОЙДА ғана бот автоматты түрде сөйлейді
     st.markdown(get_voice_player(text_resp), unsafe_allow_html=True)
     
     return text_resp
 
 # ВВОД СТРОКИ (INPUT)
-if prompt := st.chat_input("Напишите запрос (например: фото космоса или видео робота)..."):
+if prompt := st.chat_input("Напишите запрос (например: фото приоры или видео робота)..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"): st.markdown(prompt)
     
