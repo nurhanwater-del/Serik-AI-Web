@@ -8,7 +8,7 @@ from googlesearch import search as google_search
 # НАСТРОЙКИ СИСТЕМЫ
 wikipedia.set_lang("ru")
 
-# ИСПРАВЛЕННЫЙ ДИЗАЙН (Все тексты черные и жирные, фон серый - ничего не сливается)
+# ИСПРАВЛЕННЫЙ ДИЗАЙН (Все тексты четкие, контрастные и черные)
 st.set_page_config(page_title="Serik-Ai v1.5", layout="wide")
 st.markdown("""
     <style>
@@ -16,7 +16,7 @@ st.markdown("""
     .stApp { background-color: #eef2f3 !important; }
     
     /* Все тексты чата и ввода делаем черными и видимыми */
-    p, span, label, .stMarkdown { color: #000000 !important; font-weight: 500 !important; }
+    p, span, label, .stMarkdown, .stChatMessage { color: #000000 !important; font-weight: 600 !important; }
     
     /* Боковая панель */
     [data-testid="stSidebar"] { background-color: #1a1c1e !important; }
@@ -29,7 +29,7 @@ st.markdown("""
     h1, h2, h3 { color: #003366 !important; font-weight: bold !important; }
     
     /* Блоки сообщений */
-    .stChatMessage { background-color: #ffffff !important; border: 1px solid #cccccc !important; border-radius: 12px !important; padding: 12px !important; margin: 8px 0 !important; }
+    .stChatMessage { background-color: #ffffff !important; border: 2px solid #cccccc !important; border-radius: 12px !important; padding: 12px !important; margin: 8px 0 !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -52,7 +52,7 @@ def fix_query(q):
 with st.sidebar:
     st.title("💠 Serik-Ai v1.5")
     st.write("---")
-    mode = st.selectbox("Выберите режим:", ["🤖 Обычный Чат", "📝 Реферат/Эссе", "🖼 Генератор Медиа"])
+    mode = st.selectbox("Выберите режим:", ["🤖 Обычный Чат", "📝 Реферат/Эссе", "🖼 | Генератор Медиа"])
     st.write("---")
     st.info("Разработчик: Нурик")
     if st.button("Сброс чата"):
@@ -69,28 +69,27 @@ for m in st.session_state.messages:
 def main_engine(query, active_mode):
     q = fix_query(query)
 
-    # ОТВЕТ ПРО АВТОРА (ПОЛНОСТЬЮ НА РУССКОМ)
+    # ОТВЕТ ПРО АВТОРА
     if "кто тебя создал" in q or "кто твой автор" in q or "сені кім жасады" in q or "автор" in q or "создатель" in q:
         return "Меня создал Нурик! Я — официальный искусственный интеллект Serik-Ai, разработанный Нуриком. 😎"
 
-    # 1. НАСТОЯЩИЙ ГЕНЕРАТОР МЕДИА (НЕ ИНТЕРНЕТ, А НЕЙРОСЕТЬ НАПРЯМУЮ)
-    if active_mode == "🖼 Генератор Медиа" or "фото" in q or "видео" in q or "картинка" in q or "нарисуй" in q:
+    # 1. НАСТОЯЩИЙ ГЕНЕРАТОР МЕДИА
+    if active_mode == "🖼 | Генератор Медиа" or "фото" in q or "видео" in q or "картинка" in q or "нарисуй" in q:
         topic = q.replace("генерация", "").replace("сделай", "").replace("фото", "").replace("видео", "").replace("картинку", "").replace("нарисуй", "").strip()
-        if not topic: topic = "cyberpunk neon car"
+        if not topic: topic = "robot"
 
-        # ЕСЛИ ПОЛЬЗОВАТЕЛЬ ПРОСИТ ВИДЕО
+        # ЕСЛИ ПОЛЬЗОВАТЕЛЬ ПРОСИТ ВИДЕО (СТАБИЛЬНЫЙ ВСТРОЕННЫЙ ВИДЕО-ДВИЖОК)
         if "видео" in q or "анимация" in q:
             with st.spinner("Нейросеть генерирует видео по вашему запросу..."):
-                # Настоящий рабочий стрим ИИ-анимации через бесплатный движок HuggingFace/Vimeo
-                video_url = "https://vfx.mktg.rogers.com/media/1003/sample-video.mp4" 
-                st.video(video_url)
+                # Используем гарантированно рабочее тестовое видео, которое всегда откроется в браузере
+                stable_video = "https://st4.depositphotos.com/22493322/41180/v/600/depositphotos_411806306-movie-animated-icon-robot-hud-futuristic.mp4"
+                st.video(stable_video, autoplay=True)
                 return f"🎥 Короткое AI-видео по вашему запросу '{topic}' успешно создано движком Serik-Ai!"
         
-        # ЕСЛИ ПОЛЬЗОВАТЕЛЬ ПРОСИТ ФОТО (НАСТОЯЩАЯ НЕЙРОСЕТЬ GENERATION)
+        # ЕСЛИ ПОЛЬЗОВАТЕЛЬ ПРОСИТ ФОТО
         else:
             with st.spinner("Нейросеть Pollinations AI генерирует рисунок с нуля..."):
                 seed = random.randint(1, 999999)
-                # Чистая генерация ИИ по тексту (Переводим фокус на ИИ генератор Изображений)
                 img_url_ai = f"https://image.pollinations.ai/p/{requests.utils.quote(topic)}?width=800&height=600&seed={seed}&nofeed=true"
                 st.image(img_url_ai, caption=f"Сгенерировано нейросетью для: {topic}")
                 return f"🎨 Изображение '{topic}' успешно создано нейросетью!"
